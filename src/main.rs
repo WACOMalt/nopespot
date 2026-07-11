@@ -28,6 +28,7 @@ mod spotify;
 mod spotify_api;
 mod spotify_url;
 mod spotify_worker;
+mod tagging;
 mod theme;
 mod traits;
 mod ui;

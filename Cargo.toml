@@ -76,6 +76,7 @@ toml = "1.1"
 unicode-width = "0.2.2"
 url = "2.5"
 viuer = {version = "0.11", default-features = false, features = ["icy_sixel"], optional = true}
+lofty = "0.24.0"
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.4.4"
@@ -99,7 +100,7 @@ optional = true
 [features]
 alsa_backend = ["librespot-playback/alsa-backend"]
 cover = ["image", "ioctl-rs", "viuer"] # Support displaying the album cover
-default = ["share_clipboard", "pulseaudio_backend", "mpris", "notify", "crossterm_backend"]
+default = ["share_clipboard", "rodio_backend", "mpris", "notify", "crossterm_backend"]
 mpris = ["zbus"] # Allow ncspot to be controlled via MPRIS API
 ncurses_backend = ["cursive/ncurses-backend"]
 notify = ["notify-rust"] # Show what's playing via a notification
@@ -111,6 +112,14 @@ rodio_backend = ["librespot-playback/rodio-backend"]
 share_clipboard = ["arboard", "arboard/wayland-data-control"] # Share a link to the system clipboard
 share_selection = ["arboard", "arboard/wayland-data-control"] # Use the primary selection for sharing - linux and bsd only
 termion_backend = ["cursive/termion-backend"]
+
+[patch.crates-io]
+librespot-core = { path = "../librespot/core" }
+librespot-oauth = { path = "../librespot/oauth" }
+librespot-playback = { path = "../librespot/playback" }
+librespot-protocol = { path = "../librespot/protocol" }
+librespot-audio = { path = "../librespot/audio" }
+librespot-metadata = { path = "../librespot/metadata" }
 
 [package.metadata.deb]
 assets = [
