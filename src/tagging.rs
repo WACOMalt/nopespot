@@ -34,12 +34,13 @@ use crate::model::track::Track;
 use crate::spotify_api::WebApi;
 
 /// How long to wait for the librespot capture writer to finalize (`.partial` -> final `.ogg`)
-/// before giving up. Capture normally completes within a few seconds of playback starting (the
-/// track is buffered far faster than real time), so by the time a track *finishes* the file is
-/// essentially always ready; this timeout only guards against pathological cases.
-const CAPTURE_WAIT_TIMEOUT: Duration = Duration::from_secs(30);
+/// before giving up. Tagging is scheduled at track-load time; the fork finalizes the capture as
+/// soon as the whole stream has been downloaded/decrypted (usually within a few seconds, far
+/// faster than real-time playback), but we allow a generous window to cover long tracks on slow
+/// connections. This is a cheap background poll, so a large timeout costs nothing when idle.
+const CAPTURE_WAIT_TIMEOUT: Duration = Duration::from_secs(300);
 /// Poll interval while waiting for the capture file to appear.
-const CAPTURE_POLL_INTERVAL: Duration = Duration::from_millis(200);
+const CAPTURE_POLL_INTERVAL: Duration = Duration::from_millis(250);
 
 /// A self-contained snapshot of everything needed to tag and organize one captured track. This is
 /// cloned out of the [`Track`] on the caller's thread so the background thread owns all its data

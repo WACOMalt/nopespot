@@ -271,23 +271,6 @@ impl Application {
                         }
 
                         if state == PlayerEvent::FinishedTrack {
-                            // The just-finished track is still `get_current()` here, before we
-                            // advance the queue. Its raw Ogg was captured to disk by the forked
-                            // librespot; hand it off to a background thread to tag + organize.
-                            // This never blocks playback or the capture writer.
-                            if let Some(crate::model::playable::Playable::Track(track)) =
-                                self.queue.get_current()
-                            {
-                                let output_root = std::env::current_dir()
-                                    .unwrap_or_else(|_| std::path::PathBuf::from("."));
-                                if let Some(request) =
-                                    crate::tagging::TagRequest::from_track(&track, output_root)
-                                {
-                                    let api = self.spotify.api.clone();
-                                    crate::tagging::spawn_tag_and_organize(request, Some(api));
-                                }
-                            }
-
                             self.queue.next(false);
                         }
                     }

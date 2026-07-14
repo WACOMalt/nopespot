@@ -289,6 +289,19 @@ impl Queue {
             current.replace(index);
             self.spotify.update_track();
 
+            // Schedule tagging + library organization of this track's raw Ogg capture. The forked
+            // librespot finalizes `capture_<id>.ogg` early (during buffering), so we kick this off
+            // at track-load time; the tagging thread waits for the finalized file, then tags and
+            // moves it. Doing it here (once per load) rather than on FinishedTrack avoids racing the
+            // capture writer and reliably fires for every played track, including skipped ones.
+            if let Playable::Track(t) = track {
+                let output_root =
+                    std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+                if let Some(request) = crate::tagging::TagRequest::from_track(t, output_root) {
+                    crate::tagging::spawn_tag_and_organize(request, Some(self.spotify.api.clone()));
+                }
+            }
+
             #[cfg(feature = "notify")]
             if self.cfg.values().notify.unwrap_or(false) {
                 std::thread::spawn({

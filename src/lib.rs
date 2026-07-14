@@ -2,7 +2,7 @@ use clap::builder::PathBufValueParser;
 use librespot_playback::audio_backend;
 
 pub const AUTHOR: &str = "Henrik Friedrichsen <henrik@affekt.org> and contributors";
-pub const BIN_NAME: &str = "ncspot";
+pub const BIN_NAME: &str = "nopespot";
 pub const CONFIGURATION_FILE_NAME: &str = "config.toml";
 pub const USER_STATE_FILE_NAME: &str = "userstate.cbor";
 
@@ -15,7 +15,7 @@ pub fn program_arguments() -> clap::Command {
         format!("Audio backends: {}", backends.join(", "))
     };
 
-    clap::Command::new("ncspot")
+    clap::Command::new("nopespot")
         .version(env!("VERSION"))
         .author(AUTHOR)
         .about("cross-platform ncurses Spotify client")

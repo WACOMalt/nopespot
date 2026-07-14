@@ -13,6 +13,12 @@ repository.workspace = true
 [badges]
 maintenance = {status = "actively-developed"}
 
+# Rename just the output executable to `nopespot` to match the fork, while keeping the crate/library
+# name `ncspot` (so internal `use ncspot::...` references and the lib target stay unchanged).
+[[bin]]
+name = "nopespot"
+path = "src/main.rs"
+
 [workspace]
 members = [
     ".",

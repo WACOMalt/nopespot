@@ -190,6 +190,15 @@ impl Spotify {
             Some(false) => None,
             _ => Some(librespot_cache_path.join("files")),
         };
+
+        // Purge incomplete/corrupt entries left in librespot's audio cache by interrupted
+        // downloads/captures. librespot only writes a cache file once a download completes, so any
+        // zero-length file here is a leftover stub that would otherwise be picked up on the next
+        // play (as `AudioFile::Cached`) and fail to decode. Removing them forces a clean re-download.
+        if let Some(ref files_dir) = audio_cache_path {
+            Self::clean_incomplete_audio_cache(files_dir);
+        }
+
         let cache = Cache::new(
             Some(librespot_cache_path.clone()),
             Some(librespot_cache_path.join("volume")),
@@ -203,6 +212,39 @@ impl Spotify {
         let session_config = Self::session_config(cfg);
         let session = Session::new(session_config, Some(cache));
         session.connect(credentials, true).await.map(|_| session)
+    }
+
+    /// Remove zero-length (incomplete/corrupt) files from librespot's audio cache directory.
+    ///
+    /// librespot writes a cache file only after a download completes, so a zero-length file in this
+    /// directory is always a stub left behind by an interrupted download/capture. If left in place
+    /// it would be returned as a cached `AudioFile` on the next play and fail to decode. This is a
+    /// best-effort sweep run at session startup; any I/O error is logged and ignored.
+    fn clean_incomplete_audio_cache(files_dir: &std::path::Path) {
+        let entries = match std::fs::read_dir(files_dir) {
+            Ok(e) => e,
+            // Directory may not exist yet on first run; nothing to clean.
+            Err(_) => return,
+        };
+
+        let mut removed = 0usize;
+        for entry in entries.flatten() {
+            let path = entry.path();
+            let is_empty_file = entry
+                .metadata()
+                .map(|m| m.is_file() && m.len() == 0)
+                .unwrap_or(false);
+            if is_empty_file {
+                match std::fs::remove_file(&path) {
+                    Ok(()) => removed += 1,
+                    Err(e) => warn!("Failed to remove incomplete cache file {path:?}: {e}"),
+                }
+            }
+        }
+
+        if removed > 0 {
+            info!("Removed {removed} incomplete librespot audio cache file(s) from {files_dir:?}");
+        }
     }
 
     /// Create and initialize the requested audio backend.
